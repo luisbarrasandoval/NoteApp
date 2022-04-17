@@ -1,84 +1,77 @@
-import { FC, useEffect, useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
-import { TouchableOpacity } from "react-native-gesture-handler";
+import { FC, useEffect, useRef, useState } from "react";
+import { StyleSheet, TextInput, View } from "react-native";
 import Colors, { Color } from "../components/Colors";
 import { Props } from "../Types";
-
-import { Ionicons } from "@expo/vector-icons";
-import { color } from "react-native-reanimated";
+import { useTheme } from "@react-navigation/native";
+import HeaderNewNote from "../components/HeaderNewNote";
+import { useNoteContext } from "../contexts/NotesContext";
 
 const NewNote: FC<Props> = ({ navigation }) => {
+  const { addNote } = useNoteContext();
+
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [placeholder, setPlaceholder] = useState("Empieza a esribir");
+
+  const refContent = useRef<TextInput>(null);
+
+  const { colors: theme } = useTheme();
 
   const [colors, setColors] = useState<Color>({
-    name: "red",
-    bg: "#ff0000",
-    text: "#fff",
-    placeholder: "#fff",
+    bg: theme.background,
+    text: theme.text,
+    placeholder: "rgba(0,0,0,0.5)",
   });
-
-  useEffect(() => {
-    navigation.setOptions({
-      headerTitle: () => (
-        <View style={styles.header}>
-          <Text style={[{ color: colors.text }, styles.headerTitle]}>
-            {title || "Nueva Nota"}
-          </Text>
-          <Text style={[{ color: colors.text }, styles.headerSubtitle]}>
-            Personal
-          </Text>
-        </View>
-      ),
-    });
-  }, [title]);
-
-  useEffect(() => {
-    navigation.setOptions({
-      headerStyle: {
-        backgroundColor: colors.bg,
-      },
-
-      contentStyle: {
-        backgroundColor: colors.bg,
-      },
-
-      headerTintColor: colors.text,
-
-      headerRight: () => (
-        <TouchableOpacity style={styles.headerRight}>
-          <Ionicons name="checkmark" size={30} color={colors.text} />
-        </TouchableOpacity>
-      ),
-    });
-  }, [colors]);
 
   return (
     <View style={[{ backgroundColor: colors.bg }, styles.container]}>
-      <TextInput
-        style={[{ color: colors.text }, styles.title]}
-        placeholder="Titulo"
-        value={title}
-        onChangeText={setTitle}
-        placeholderTextColor={colors.placeholder}
-      />
-      <TextInput
-        style={[{ color: colors.text }, styles.content]}
-        placeholder="Empieza a esribir"
-        multiline
-        value={content}
-        onChangeText={setContent}
-        placeholderTextColor={colors.placeholder}
-      />
-      <Colors
-        width={35}
-        height={35}
-        borderRadius={35}
-        space={10}
-        onColorSelected={(color) => {
-          setColors(color);
+      <HeaderNewNote
+        back={navigation.canGoBack() ? navigation.goBack : undefined}
+        colors={colors}
+        saveCallback={() => {
+          const nota = {
+            id: title.length + content.length,
+            title,
+            content,
+            category: "Personal",
+            date: new Date().toDateString(),
+            bg: colors.bg,
+            text: colors.text,
+          };
+          addNote(nota);
+          navigation.goBack();
         }}
       />
+
+      <View style={{ marginTop: 15, flex: 1 }}>
+        <TextInput
+          style={[{ color: colors.text }, styles.title]}
+          placeholder="Titulo"
+          value={title}
+          onChangeText={setTitle}
+          placeholderTextColor={colors.placeholder}
+          onSubmitEditing={() => refContent.current?.focus()}
+        />
+        <TextInput
+          style={[{ color: colors.text }, styles.content]}
+          placeholder={placeholder}
+          multiline
+          value={content}
+          onChangeText={setContent}
+          placeholderTextColor={colors.placeholder}
+          ref={refContent}
+        />
+
+        <Colors
+          width={35}
+          height={35}
+          borderRadius={35}
+          space={10}
+          onColorSelected={(color) => {
+            setColors(color);
+          }}
+        />
+      </View>
     </View>
   );
 };
@@ -88,6 +81,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingVertical: 10,
+    paddingTop: 40,
   },
 
   title: {
@@ -100,23 +94,6 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     fontSize: 14,
     marginTop: 10,
-  },
-
-  headerRight: {
-    marginRight: 20,
-  },
-
-  header: {
-    flexDirection: "column",
-  },
-
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-
-  headerSubtitle: {
-    fontSize: 12,
   },
 });
 
