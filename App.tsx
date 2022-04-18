@@ -8,6 +8,7 @@ import NewNote from "./screens/NewNote";
 import { RootStackParamList } from "./Types";
 import ListNotes from "./screens/ListNotes";
 import { NoteProvider } from "./contexts/NotesContext";
+import RootNavigator from "./navigators/RootNavigator";
 
 const MyTheme = {
   light: {
@@ -43,26 +44,7 @@ export default function App() {
   return (
     <UserProvider>
       <NoteProvider>
-        <NavigationContainer
-          theme={useColorScheme() === "dark" ? MyTheme.dark : MyTheme.light}
-        >
-          <Drawer.Navigator
-            screenOptions={{
-              headerShadowVisible: false,
-              drawerType: "slide",
-            }}
-          >
-            <Drawer.Screen name="ListNote" component={ListNotes} />
-
-            <Drawer.Screen
-              name="NewNote"
-              component={NewNote}
-              options={{
-                headerShown: false,
-              }}
-            />
-          </Drawer.Navigator>
-        </NavigationContainer>
+       <RootNavigator />
       </NoteProvider>
     </UserProvider>
   );
